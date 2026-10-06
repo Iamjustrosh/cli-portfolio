@@ -5,7 +5,7 @@ export const gears: GearGroup[] = [
     category: "software",
     items: [
       {
-        type: "video screening",
+        type: "video recording/streaming",
         name: "OBS Studio + Recordly",
       },
       {

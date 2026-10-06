@@ -45,12 +45,18 @@ const files = new Map<string, () => Block[]>([
   ],
   [
     "gears.txt",
-    () => [
-      {
-        type: "list",
-        rows: gears.map((group) => ({ label: group.category, detail: group.items.join(", ") })),
-      },
-    ],
+    () =>
+      gears.flatMap((group, index): Block[] => [
+        ...(index > 0 ? [{ type: "spacer" } as const] : []),
+        { type: "text", tone: "strong", text: group.category.toUpperCase() },
+        {
+          type: "list",
+          rows: group.items.map((item) => ({
+            label: item.type,
+            detail: item.details ? `${item.name} — ${item.details}` : item.name,
+          })),
+        },
+      ]),
   ],
 ]);
 
