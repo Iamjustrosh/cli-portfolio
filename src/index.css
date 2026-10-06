@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/inter";
+@import "@fontsource/geist-pixel";
+
+/* ------------------------------------------------------------------
+   Design tokens
+   Neutral-50 … neutral-900 do the heavy lifting. Two accents only:
+   - accent: prompt symbol, cursor, hover on clickable items
+   - danger: error lines
+   ------------------------------------------------------------------ */
+@theme {
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: "Geist Pixel", "Geist Mono Variable", ui-monospace, monospace;
+
+  --color-accent: var(--color-green-400);
+  --color-danger: var(--color-red-400);
+}
+
+/* Reading width for long prose (project descriptions, bio). Lists, tables
+   and fastfetch use the full container width instead. */
+@utility measure {
+  max-width: 80ch;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    color-scheme: dark;
+    background-color: var(--color-neutral-900);
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-neutral-900);
+    color: var(--color-neutral-200);
+    font-family: var(--font-mono);
+    font-feature-settings: "calt" 0; /* no ligatures: keep the terminal honest */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior: none;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 30%, transparent);
+    color: var(--color-neutral-50);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* `exit`: services/leave.ts sets data-leaving, the page fades out, then we redirect. */
+  #root {
+    transition: opacity 0.5s ease-in;
+  }
+  html[data-leaving] #root {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #root {
+      transition: none;
+    }
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* Thin, quiet scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-700) transparent;
+  }
+}
+
+/* Block cursor: draws the character under the caret in inverse colours.
+   blink  = focused and idle (about once per second)
+   solid  = a scripted command is being typed
+   hollow = the page is not focused (outline only, like a real terminal) */
+@layer components {
+  .terminal-cursor {
+    color: var(--color-neutral-900);
+    background-color: var(--color-accent);
+  }
+
+  .terminal-cursor[data-state="blink"] {
+    animation: cursor-blink 1.05s steps(1, end) infinite;
+  }
+
+  .terminal-cursor[data-state="hollow"] {
+    color: inherit;
+    background-color: transparent;
+    outline: 1px solid var(--color-accent);
+    outline-offset: -1px;
+  }
+
+  @keyframes cursor-blink {
+    0%,
+    50% {
+      color: var(--color-neutral-900);
+      background-color: var(--color-accent);
+    }
+    50.01%,
+    100% {
+      color: var(--color-neutral-50);
+      background-color: transparent;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-cursor[data-state="blink"] {
+      animation: none;
+    }
+  }
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" class="bg-neutral-900">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#171717" />
+
+    <title>rosh@portfolio</title>
+    <meta name="description" content="Rosh's portfolio, as an interactive terminal. Type rosh -h to get started." />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Link previews. VITE_SITE_URL is this terminal site's own URL (see .env). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="rosh@portfolio" />
+    <meta property="og:description" content="Rosh's portfolio, as an interactive terminal. Type rosh -h to get started." />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="rosh@portfolio" />
+    <meta name="twitter:description" content="Rosh's portfolio, as an interactive terminal. Type rosh -h to get started." />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/og.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="margin: 0; padding: 24px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; color: #d4d4d4; background: #171717">
+        This portfolio is an interactive terminal and needs JavaScript to run.
+        <a href="%VITE_MAIN_SITE_URL%" style="color: #d4d4d4">Visit the main site instead.</a>
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
