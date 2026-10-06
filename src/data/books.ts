@@ -2,7 +2,10 @@
 import type { TitledEntry } from "./types";
 
 export const books: TitledEntry[] = [
-  { title: "Book One", note: "Author Name" },
-  { title: "Book Two", note: "Author Name" },
-  { title: "Book Three", note: "Author Name" },
+  { title: "Steal like an artist", note: "Austin Kleon" },
+  { title: "The Art Of Not Overthinking", note: "Shaurya Kapoor" },
+  { title: "Too Good to be true", note: "Prajakta Koli" },
+  { title: "Twisted Love", note: "Ana Huang" },
+  { title: "We Are There for Each Other:", note: "Sagar Chudesara" },
+  { title: "...", note:"reading few more tell you soon"}
 ];

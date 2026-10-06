@@ -38,7 +38,13 @@ export interface TitledEntry {
   note?: string;
 }
 
-export interface GearGroup {
-  category: string;
-  items: string[];
-}
+export type GearItem = {
+  type: string;
+  name: string;
+  details?: string;
+};
+
+export type GearGroup = {
+  category: "hardware" | "software" | "tools";
+  items: GearItem[];
+};

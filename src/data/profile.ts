@@ -2,10 +2,10 @@
 import type { Profile } from "./types";
 
 export const profile: Profile = {
-  name: "Rosh",
-  dateOfBirth: "2000-01-01",
-  location: "City, Country",
+  name: "Roshan Jain",
+  dateOfBirth: "2004-07-22",
+  location: "Satna, Madhya Pradesh",
   summary:
-    "A short two-line summary about who you are and what you build. Keep it plain and specific.",
-  extras: [{ label: "Role", value: "Frontend developer" }],
+    "Software Developer skilled in building scalable web applications and production-ready solutions using React.js, TypeScript, Node.js, and modern backend technologies.",
+  extras: [{ label: "Role", value: "Software developer" }],
 };

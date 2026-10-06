@@ -2,18 +2,18 @@ import { Fragment } from "react";
 import Reveal from "./Reveal";
 
 /** Written out in full so Tailwind can see every class. */
-const PALETTE = [
-  "bg-neutral-50",
-  "bg-neutral-100",
-  "bg-neutral-200",
-  "bg-neutral-300",
-  "bg-neutral-400",
-  "bg-neutral-500",
-  "bg-neutral-600",
-  "bg-neutral-700",
-  "bg-neutral-800",
-  "bg-neutral-900",
-];
+// const PALETTE = [
+//   "bg-neutral-50",
+//   "bg-neutral-100",
+//   "bg-neutral-200",
+//   "bg-neutral-300",
+//   "bg-neutral-400",
+//   "bg-neutral-500",
+//   "bg-neutral-600",
+//   "bg-neutral-700",
+//   "bg-neutral-800",
+//   "bg-neutral-900",
+// ];
 
 /**
  * Logo (image, used as-is) on the left, details on the right.
@@ -54,11 +54,11 @@ export default function FastfetchBlock({
               </Fragment>
             ))}
           </dl>
-          <div aria-hidden="true" className="mt-4 flex w-fit outline outline-1 outline-neutral-800">
+          {/* <div aria-hidden="true" className="mt-4 flex w-fit outline outline-1 outline-neutral-800">
             {PALETTE.map((color) => (
               <span key={color} className={`h-4 w-6 ${color}`} />
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
     </Reveal>

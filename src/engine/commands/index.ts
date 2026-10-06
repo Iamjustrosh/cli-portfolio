@@ -7,6 +7,7 @@ import { fastfetchCommand } from "./fastfetch";
 import { lsCommand } from "./ls";
 import { createRoshCommand } from "./rosh";
 import { runCommand } from "./run";
+import { resume } from "./resume"
 
 /**
  * The order of this array is the order shown in `rosh -h`.
@@ -16,6 +17,7 @@ const rest: Command[] = [
   catCommand,
   runCommand,
   fastfetchCommand,
+  resume,
   playCommand,
   stopCommand,
   clearCommand,

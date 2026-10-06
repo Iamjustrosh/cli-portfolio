@@ -6,7 +6,7 @@ export const config = {
   /** File lives in /public. `run resume` downloads it under `filename`. */
   resume: { href: "/resume.pdf", filename: "resume.pdf" },
   /** Transparent SVG or PNG in /public. Used as-is in fastfetch. */
-  logo: { src: "/logo.svg", alt: "Rosh logo" },
+  logo: { src: "/logo.png", alt: "Rosh logo" },
 
   keyboard: {
     /** Files live in /public/audio/keys/<pack>/{press,release}/*.mp3 */

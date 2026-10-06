@@ -3,6 +3,7 @@ import { games } from "@/data/games";
 import { projects } from "@/data/projects";
 import type { Block, Command } from "../types";
 import { fail, ok } from "./helpers";
+import { anime } from "@/data/anime";
 
 const targets = new Map<string, () => Block[]>([
   [
@@ -20,6 +21,7 @@ const targets = new Map<string, () => Block[]>([
   ],
   ["games", () => [{ type: "list", rows: games.map((game) => ({ label: game.title, detail: game.note })) }]],
   ["books", () => [{ type: "list", rows: books.map((book) => ({ label: book.title, detail: book.note })) }]],
+  ["anime", () => [{ type: "list", rows: anime.map((anime) => ({ label: anime.title, detail: anime.note })) }]],
 ]);
 
 export const lsCommand: Command = {
@@ -28,6 +30,7 @@ export const lsCommand: Command = {
     { label: "ls projects", description: "list my projects", run: "ls projects" },
     { label: "ls games", description: "games I like to play", run: "ls games" },
     { label: "ls books", description: "books I have read", run: "ls books" },
+    { label: "ls anime", description: "animes I watched or watching", run: "ls anime"},
   ],
   run(args) {
     if (args.length === 0) return fail("ls: missing directory");

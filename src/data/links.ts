@@ -2,9 +2,9 @@
 import type { LinkEntry } from "./types";
 
 export const links: LinkEntry[] = [
-  { label: "mail", display: "you@example.com", url: "mailto:you@example.com" },
-  { label: "instagram", display: "instagram.com/your-handle", url: "https://instagram.com/your-handle" },
-  { label: "github", display: "github.com/your-handle", url: "https://github.com/your-handle" },
-  { label: "linkedin", display: "linkedin.com/in/your-handle", url: "https://linkedin.com/in/your-handle" },
-  { label: "behance", display: "behance.net/your-handle", url: "https://behance.net/your-handle" },
+  { label: "mail", display: "roshanjain7422@gmail.com", url: "mailto:roshanjain7422@gmail.com" },
+  { label: "instagram", display: "nstagram.com/iamjustrosh/", url: "https://https://www.instagram.com/iamjustrosh/" },
+  { label: "github", display: "github.com/iamjustrosh", url: "https://github.com/iamjustrosh" },
+  { label: "linkedin", display: "linkedin.com/in/iamjustrosh", url: "https://linkedin.com/in/iamjustrosh" },
+  { label: "behance", display: "behance.net/roshanjain12", url: "https://behance.net/roshanjain12" },
 ];
