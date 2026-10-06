@@ -7,7 +7,7 @@ export const resume: Command = {
     usages: [
         { label: "resume", description: "download my resume", run: "resume" },
     ],
-    run(args, ctx) {
+    run(args) {
         if (args.length > 0) return null;
         return ok(
             [{ type: "text", tone: "muted", text: `downloading ${config.resume.filename}...` }],
