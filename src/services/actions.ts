@@ -1,5 +1,6 @@
 import type { Action } from "@/engine/types";
 import { beginLeaving, prefersReducedMotion } from "./leave";
+import { setKeyboardPack } from "./keySound";
 import { playLofi, stopLofi } from "./lofi";
 import { navigate } from "./navigate";
 
@@ -36,6 +37,9 @@ export function performAction(action: Action): void {
         window.setTimeout(beginLeaving, Math.max(0, action.delayMs - FADE_MS));
       }
       window.setTimeout(() => navigate(action.url), action.delayMs);
+      break;
+    case "keyboard":
+      void setKeyboardPack(action.pack);
       break;
     case "lofi":
       if (action.op === "play") playLofi();

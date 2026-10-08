@@ -5,6 +5,7 @@ import { unitTotal } from "@/engine/blocks";
 import type { Block } from "@/engine/types";
 import { performAction } from "@/services/actions";
 import { getAudioState } from "@/services/audioStore";
+import { getActivePack } from "@/services/keySound";
 import { rand } from "@/lib/utils";
 
 /**
@@ -71,7 +72,7 @@ export function useTerminal() {
       skipRef.current = null;
       setInput("");
 
-      const result = execute(raw, { audio: getAudioState() });
+      const result = execute(raw, { audio: getAudioState(), keyboard: { pack: getActivePack() } });
 
       let cleared = false;
       for (const action of result.actions) {

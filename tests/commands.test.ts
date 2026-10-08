@@ -32,8 +32,30 @@ describe("ls", () => {
   it("fails like a shell for bad targets, with the help hint", () => {
     expect(text(execute("ls nope").blocks)).toContain("ls: nope: no such directory");
     expect(text(execute("ls constructor").blocks)).toContain("no such directory");
-    expect(text(execute("ls").blocks)).toContain("ls: missing directory");
     expect(text(execute("ls nope").blocks)).toContain("use rosh -h or rosh --help");
+  });
+});
+
+describe("bare ls and cat", () => {
+  it("ls alone lists the directories, each clickable", () => {
+    const rows = listRows(execute("ls").blocks);
+    expect(rows.map((row) => row.label)).toEqual(["projects", "games", "books"]);
+    expect(rows.map((row) => row.command)).toEqual(["ls projects", "ls games", "ls books"]);
+  });
+
+  it("cat alone lists every readable file, each clickable", () => {
+    const rows = listRows(execute("cat").blocks);
+    const labels = rows.map((row) => row.label);
+    for (const name of ["experience.txt", "stack.json", "connect.txt", "gears.txt", `${first.slug}.txt`]) {
+      expect(labels).toContain(name);
+    }
+    expect(rows.every((row) => row.command?.startsWith("cat "))).toBe(true);
+  });
+
+  it("every listed command really works", () => {
+    for (const row of [...listRows(execute("ls").blocks), ...listRows(execute("cat").blocks)]) {
+      expect(text(execute(row.command!).blocks)).not.toContain('"type":"error"');
+    }
   });
 });
 
@@ -65,7 +87,6 @@ describe("cat", () => {
   it("fails for missing files", () => {
     expect(text(execute("cat nope.txt").blocks)).toContain("cat: nope.txt: no such file");
     expect(text(execute("cat constructor").blocks)).toContain("no such file");
-    expect(text(execute("cat").blocks)).toContain("cat: missing file name");
   });
 });
 
@@ -114,12 +135,13 @@ describe("help", () => {
     for (const expected of [
       "rosh -h", "ls projects", "ls games", "ls books", "cat <project>.txt", "cat experience.txt",
       "cat stack.json", "cat connect.txt", "cat gears.txt", "run <project>", "run resume",
-      "fastfetch", "play", "stop", "clear", "exit",
+      "fastfetch", "keyboard", "play", "stop", "clear", "exit",
     ]) {
       expect(labels).toContain(expected);
     }
     expect(rows.find((row) => row.label === "cat <project>.txt")?.command).toBeUndefined();
     expect(rows.find((row) => row.label === "run <project>")?.command).toBeUndefined();
+    expect(rows.find((row) => row.label === "keyboard <name>")?.command).toBeUndefined();
   });
 
   it("every clickable help row runs without an error", () => {
@@ -131,9 +153,10 @@ describe("help", () => {
 });
 
 describe("play and stop", () => {
-  const idle = { audio: { playing: false, muted: false } };
-  const playing = { audio: { playing: true, muted: false } };
-  const mutedCtx = { audio: { playing: false, muted: true } };
+  const keyboard = { pack: null };
+  const idle = { audio: { playing: false, muted: false }, keyboard };
+  const playing = { audio: { playing: true, muted: false }, keyboard };
+  const mutedCtx = { audio: { playing: false, muted: true }, keyboard };
 
   it("play announces the track and asks the player to start", () => {
     const result = execute("play", idle);

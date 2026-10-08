@@ -21,6 +21,13 @@ interface FakeGain {
   disconnect: ReturnType<typeof vi.fn>;
 }
 
+const ALL_PACKS = [
+  { name: "alpaca", generic: ["GENERIC_R0", "GENERIC_R1", "GENERIC_R2", "GENERIC_R3", "GENERIC_R4"], release: true },
+  { name: "bluealps", generic: ["GENERIC_R0", "GENERIC_R1", "GENERIC_R2"], release: true },
+  { name: "mxblack", generic: ["GENERIC_R0", "GENERIC_R1"], release: false },
+];
+let packs = ALL_PACKS;
+
 let fetched: string[];
 let missing: Set<string>;
 let sources: FakeSource[];
@@ -81,6 +88,7 @@ function installFakes() {
 
 async function load() {
   vi.resetModules();
+  vi.doMock("@/data/keyboardPacks", () => ({ keyboardPacks: packs }));
   const keySound = await import("@/services/keySound");
   const store = await import("@/services/audioStore");
   const { config } = await import("@/data/config");
@@ -97,12 +105,15 @@ const tick = (ms = 100) => {
 
 beforeEach(() => {
   missing = new Set();
+  packs = ALL_PACKS;
+  window.localStorage.clear();
   installFakes();
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.doUnmock("@/data/keyboardPacks");
 });
 
 describe("loading", () => {
@@ -141,6 +152,38 @@ describe("loading", () => {
     prefetchKeySounds();
     await settle();
     expect(fetched).toHaveLength(8);
+  });
+
+  it("uses the generic files each pack really has, not a fixed count", async () => {
+    packs = [{ name: "odd", generic: ["GENERIC_R0", "GENERIC_R7"], release: false }];
+    const { prefetchKeySounds } = await load();
+    prefetchKeySounds();
+    await settle();
+    expect(fetched.filter((url) => url.includes("GENERIC")).map((url) => url.split("/").pop()).sort()).toEqual([
+      "GENERIC_R0.mp3",
+      "GENERIC_R7.mp3",
+    ]);
+  });
+
+  it("does nothing when no packs are installed", async () => {
+    packs = [];
+    const { prefetchKeySounds, playKey, getActivePack } = await load();
+    prefetchKeySounds();
+    await settle();
+    expect(getActivePack()).toBeNull();
+    expect(fetched).toEqual([]);
+    expect(() => playKey("generic")).not.toThrow();
+    expect(sources).toHaveLength(0);
+  });
+
+  it("does not fetch release files for a pack that has none", async () => {
+    packs = [{ name: "mxblack", generic: ["GENERIC_R0"], release: false }];
+    const { prefetchKeySounds, config } = await load();
+    config.keyboard.playRelease = true;
+    prefetchKeySounds();
+    await settle();
+    expect(fetched.some((url) => url.includes("/release/"))).toBe(false);
+    config.keyboard.playRelease = false;
   });
 
   it("survives missing files and a missing Web Audio API", async () => {
@@ -273,5 +316,148 @@ describe("playing", () => {
       "/audio/keys/alpaca/release/GENERIC.mp3",
     ]);
     config.keyboard.playRelease = false;
+  });
+});
+
+describe("switching packs", () => {
+  const pressUrls = (pack: string) => fetched.filter((url) => url.includes(`/${pack}/press/`));
+
+  it("starts with the configured default, or the first installed pack", async () => {
+    expect((await load()).getActivePack()).toBe("alpaca");
+    packs = [ALL_PACKS[1], ALL_PACKS[2]];
+    expect((await load()).getActivePack()).toBe("bluealps");
+  });
+
+  it("starts with the pack the visitor picked last time, if it is still installed", async () => {
+    window.localStorage.setItem("rosh:prefs", JSON.stringify({ muted: false, pack: "mxblack" }));
+    const { getActivePack, prefetchKeySounds } = await load();
+    expect(getActivePack()).toBe("mxblack");
+    prefetchKeySounds();
+    await settle();
+    expect(pressUrls("mxblack").length).toBeGreaterThan(0);
+    expect(pressUrls("alpaca")).toHaveLength(0);
+  });
+
+  it("ignores a saved pack that has since been removed", async () => {
+    window.localStorage.setItem("rosh:prefs", JSON.stringify({ muted: false, pack: "removed" }));
+    expect((await load()).getActivePack()).toBe("alpaca");
+  });
+
+  it("loads the new pack, switches, remembers it, and clicks once in the new sound", async () => {
+    const { prefetchKeySounds, setKeyboardPack, getActivePack } = await load();
+    prefetchKeySounds();
+    await settle();
+    expect(await setKeyboardPack("bluealps")).toBe(true);
+    expect(getActivePack()).toBe("bluealps");
+    expect(pressUrls("bluealps")).toHaveLength(6); // 3 generic + backspace + enter + space
+    expect(JSON.parse(window.localStorage.getItem("rosh:prefs")!).pack).toBe("bluealps");
+    expect(sources).toHaveLength(1);
+    expect(sources[0].buffer.url).toContain("/bluealps/press/");
+    expect(sources[0].start).toHaveBeenCalledTimes(1);
+  });
+
+  it("clicks even right after another key sound (the Enter that ran the command)", async () => {
+    const { prefetchKeySounds, setKeyboardPack, playKey } = await load();
+    prefetchKeySounds();
+    await settle();
+    playKey("enter"); // same instant: the normal 25 ms gap would swallow a second sound
+    await setKeyboardPack("bluealps");
+    expect(sources).toHaveLength(2);
+    expect(sources[1].buffer.url).toContain("/bluealps/");
+  });
+
+  it("plays the new pack's files for every key afterwards", async () => {
+    const { prefetchKeySounds, setKeyboardPack, playKey } = await load();
+    prefetchKeySounds();
+    await settle();
+    await setKeyboardPack("bluealps");
+    sources.length = 0;
+    tick();
+    playKey("space");
+    tick();
+    playKey("enter");
+    expect(sources.map((source) => source.buffer.url)).toEqual([
+      "/audio/keys/bluealps/press/SPACE.mp3",
+      "/audio/keys/bluealps/press/ENTER.mp3",
+    ]);
+  });
+
+  it("switching back to a pack that is already loaded fetches nothing again", async () => {
+    const { prefetchKeySounds, setKeyboardPack } = await load();
+    prefetchKeySounds();
+    await settle();
+    await setKeyboardPack("bluealps");
+    const count = fetched.length;
+    expect(await setKeyboardPack("alpaca")).toBe(true);
+    expect(fetched).toHaveLength(count);
+  });
+
+  it("finds the pack whatever the capitalisation, and rejects unknown names without fetching", async () => {
+    const { setKeyboardPack, getActivePack } = await load();
+    expect(await setKeyboardPack("MXBLACK")).toBe(true);
+    expect(getActivePack()).toBe("mxblack");
+    const count = fetched.length;
+    expect(await setKeyboardPack("nope")).toBe(false);
+    expect(await setKeyboardPack("constructor")).toBe(false);
+    expect(fetched).toHaveLength(count);
+  });
+
+  it("keeps the current pack and does not save it when the new pack's files cannot be loaded", async () => {
+    const { prefetchKeySounds, setKeyboardPack, getActivePack } = await load();
+    prefetchKeySounds();
+    await settle();
+    for (const name of ["GENERIC_R0", "GENERIC_R1", "GENERIC_R2", "BACKSPACE", "ENTER", "SPACE"]) {
+      missing.add(`/audio/keys/bluealps/press/${name}.mp3`);
+    }
+    expect(await setKeyboardPack("bluealps")).toBe(false);
+    expect(getActivePack()).toBe("alpaca");
+    expect(window.localStorage.getItem("rosh:prefs")).toBeNull();
+    expect(sources).toHaveLength(0);
+  });
+
+  it("can retry a failed pack later", async () => {
+    const { setKeyboardPack, getActivePack } = await load();
+    for (const name of ["GENERIC_R0", "GENERIC_R1", "GENERIC_R2", "BACKSPACE", "ENTER", "SPACE"]) {
+      missing.add(`/audio/keys/bluealps/press/${name}.mp3`);
+    }
+    expect(await setKeyboardPack("bluealps")).toBe(false);
+    missing.clear();
+    expect(await setKeyboardPack("bluealps")).toBe(true);
+    expect(getActivePack()).toBe("bluealps");
+  });
+
+  it("the last of several quick switches wins", async () => {
+    const { setKeyboardPack, getActivePack } = await load();
+    const [first, second] = await Promise.all([setKeyboardPack("bluealps"), setKeyboardPack("mxblack")]);
+    expect(first).toBe(false); // replaced by the newer request
+    expect(second).toBe(true);
+    expect(getActivePack()).toBe("mxblack");
+  });
+
+  it("switches silently while sound is off", async () => {
+    const { prefetchKeySounds, setKeyboardPack, getActivePack, setMuted } = await load();
+    prefetchKeySounds();
+    await settle();
+    setMuted(true);
+    expect(await setKeyboardPack("bluealps")).toBe(true);
+    expect(getActivePack()).toBe("bluealps");
+    expect(sources).toHaveLength(0);
+  });
+
+  it("does not repeat the previous pack's last random clip when the new pack starts", async () => {
+    const { prefetchKeySounds, setKeyboardPack, playKey } = await load();
+    prefetchKeySounds();
+    await settle();
+    for (let i = 0; i < 10; i++) {
+      playKey("generic");
+      tick();
+    }
+    await setKeyboardPack("mxblack");
+    sources.length = 0;
+    for (let i = 0; i < 20; i++) {
+      tick();
+      playKey("generic");
+    }
+    expect(sources.every((source) => source.buffer.url.includes("/mxblack/"))).toBe(true);
   });
 });

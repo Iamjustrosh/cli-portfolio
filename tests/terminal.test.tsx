@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import App from "@/App";
 import Terminal from "@/components/terminal/Terminal";
 import { projects } from "@/data/projects";
-import { playKey } from "@/services/keySound";
+import { playKey, setKeyboardPack } from "@/services/keySound";
 import { getAudioState, resetAudioState } from "@/services/audioStore";
 
 // Key sounds are checked through this spy: real audio cannot run in a test.
@@ -12,6 +12,14 @@ vi.mock("@/services/keySound", () => ({
   playKey: vi.fn(),
   prefetchKeySounds: vi.fn(),
   unlockKeySounds: vi.fn(),
+  setKeyboardPack: vi.fn(async () => true),
+  getActivePack: vi.fn(() => "alpaca"),
+}));
+vi.mock("@/data/keyboardPacks", () => ({
+  keyboardPacks: [
+    { name: "alpaca", generic: ["GENERIC_R0"], release: true },
+    { name: "bluealps", generic: ["GENERIC_R0"], release: true },
+  ],
 }));
 
 class FakeResizeObserver {
@@ -279,5 +287,87 @@ describe("lofi and the status bar", () => {
       element?.dispatchEvent(new Event("error"));
     });
     expect(getAudioState().playing).toBe(false);
+  });
+});
+
+describe("v1.1 commands in the terminal", () => {
+  const afterCommand = async (text: string) => {
+    await typeAndEnter(text);
+    await wait(3000);
+  };
+
+  beforeEach(async () => {
+    vi.mocked(setKeyboardPack).mockClear();
+    await wait(5000);
+  });
+
+  it("help and ? show the command list, and hidden commands stay out of it", async () => {
+    await afterCommand("help");
+    const afterHelp = log();
+    expect(afterHelp.match(/clear the screen/g)).toHaveLength(2); // boot help + this one
+    await afterCommand("?");
+    expect(log().match(/clear the screen/g)).toHaveLength(3);
+    for (const hidden of ["whoami", "fortune", "pwd"]) {
+      expect(log()).not.toContain(`${hidden}who`); // never listed as a help row
+    }
+    expect(screen.queryByRole("button", { name: "fortune" })).toBeNull();
+  });
+
+  it("whoami, hello, cd and pwd answer", async () => {
+    await afterCommand("whoami");
+    expect(log()).toContain("guest");
+    await afterCommand("hello");
+    expect(log()).toContain("hello, guest. type rosh -h to see what you can do.");
+    await afterCommand("cd projects");
+    expect(log()).toContain("everything is already here. try rosh -h");
+    await afterCommand("pwd");
+    expect(log()).toContain("/home/guest/portfolio");
+  });
+
+  it("fortune prints a line from the list", async () => {
+    await afterCommand("fortune");
+    const { fortunes } = await import("@/data/fortunes");
+    expect(fortunes.some((line) => log().includes(line))).toBe(true);
+  });
+
+  it("bare ls lists directories and clicking one runs it", async () => {
+    await afterCommand("ls");
+    expect(log()).toContain("directories:");
+    fireEvent.click(screen.getByRole("button", { name: "games" }));
+    await wait(5000);
+    expect(log()).toContain("Game One");
+  });
+
+  it("bare cat lists files and clicking one reads it", async () => {
+    await afterCommand("cat");
+    expect(log()).toContain("files:");
+    fireEvent.click(screen.getByRole("button", { name: "gears.txt" }));
+    await wait(5000);
+    expect(log()).toContain("hardware");
+  });
+
+  it("keyboard lists the packs, and clicking one switches to it", async () => {
+    await afterCommand("keyboard");
+    expect(log()).toContain("keyboard sounds, click one to switch:");
+    expect(log()).toContain("current"); // alpaca is marked
+    fireEvent.click(screen.getByRole("button", { name: "bluealps" }));
+    await wait(5000);
+    expect(log()).toContain("keyboard: bluealps");
+    expect(setKeyboardPack).toHaveBeenCalledWith("bluealps");
+  });
+
+  it("typing keyboard <name> switches without any extra key sound for the output", async () => {
+    vi.mocked(playKey).mockClear();
+    await afterCommand("keyboard bluealps");
+    expect(setKeyboardPack).toHaveBeenCalledWith("bluealps");
+    // only the Enter key itself clicked (typeAndEnter sends one Enter); nothing for the printed output
+    expect(vi.mocked(playKey).mock.calls).toEqual([["enter", "press"]]);
+  });
+
+  it("an unknown keyboard name explains and does not switch", async () => {
+    await afterCommand("keyboard nope");
+    expect(log()).toContain("keyboard: nope: no such keyboard");
+    expect(log()).toContain("type keyboard to see the available sounds");
+    expect(setKeyboardPack).not.toHaveBeenCalled();
   });
 });

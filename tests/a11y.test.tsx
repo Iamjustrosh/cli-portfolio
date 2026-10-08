@@ -8,6 +8,8 @@ vi.mock("@/services/keySound", () => ({
   playKey: vi.fn(),
   prefetchKeySounds: vi.fn(),
   unlockKeySounds: vi.fn(),
+  setKeyboardPack: vi.fn(async () => true),
+  getActivePack: vi.fn(() => "alpaca"),
 }));
 
 class FakeResizeObserver {

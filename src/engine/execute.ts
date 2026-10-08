@@ -1,7 +1,10 @@
 import { registry } from "./commands";
 import type { ExecContext, ExecResult } from "./types";
 
-const DEFAULT_CONTEXT: ExecContext = { audio: { playing: false, muted: false } };
+const DEFAULT_CONTEXT: ExecContext = {
+  audio: { playing: false, muted: false },
+  keyboard: { pack: null },
+};
 
 /**
  * Clean the raw input: trim, collapse spaces, lowercase, and turn the long

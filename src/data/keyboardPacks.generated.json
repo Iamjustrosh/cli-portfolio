@@ -1,0 +1,123 @@
+[
+  {
+    "name": "alpaca",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "blackink",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "bluealps",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "boxnavy",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "cream",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "holypanda",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "mxblack",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "mxbrown",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "redink",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "topre",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  },
+  {
+    "name": "turquoise",
+    "generic": [
+      "GENERIC_R0",
+      "GENERIC_R1",
+      "GENERIC_R2",
+      "GENERIC_R3",
+      "GENERIC_R4"
+    ],
+    "release": true
+  }
+]

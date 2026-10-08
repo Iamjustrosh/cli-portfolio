@@ -1,3 +1,4 @@
+// import { config } from "@/data/config";
 import { projects } from "@/data/projects";
 import type { Command } from "../types";
 import { fail, ok } from "./helpers";
@@ -6,6 +7,7 @@ export const runCommand: Command = {
   name: "run",
   usages: [
     { label: "run <project>", description: "open a project" },
+    // { label: "run resume", description: "download my resume", run: "run resume" },
   ],
   run(args) {
     if (args.length === 0) return fail("run: missing target");

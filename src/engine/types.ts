@@ -39,11 +39,14 @@ export type Action =
   | { type: "open"; url: string }
   | { type: "download"; href: string; filename: string }
   | { type: "redirect"; url: string; /** wait before leaving so the message can be read */ delayMs?: number }
-  | { type: "lofi"; op: "play" | "stop" };
+  | { type: "lofi"; op: "play" | "stop" }
+  | { type: "keyboard"; pack: string };
 
 /** What the engine may know about the outside world when a command runs. */
 export interface ExecContext {
   audio: { playing: boolean; muted: boolean };
+  /** The keyboard sound pack in use (null when none are installed). */
+  keyboard: { pack: string | null };
 }
 
 export interface ExecResult {
@@ -61,6 +64,10 @@ export interface Usage {
 
 export interface Command {
   name: string;
+  /** Other names that run the same command, e.g. `help` and `?` for `rosh`. */
+  aliases?: string[];
+  /** Hidden commands work but are left out of `rosh -h` (easter eggs, small extras). */
+  hidden?: boolean;
   usages: Usage[];
   /** Return null when the arguments are not valid for this command. */
   run(args: string[], ctx: ExecContext): ExecResult | null;

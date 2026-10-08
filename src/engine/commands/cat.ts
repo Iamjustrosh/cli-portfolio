@@ -31,21 +31,33 @@ function projectBlocks(slug: string): Block[] | null {
   ];
 }
 
-const files = new Map<string, () => Block[]>([
-  ["experience.txt", experienceBlocks],
-  ["stack.json", () => [{ type: "json", lines: JSON.stringify(stack, null, 2).split("\n") }]],
-  [
-    "connect.txt",
-    () => [
+interface FileDef {
+  name: string;
+  description: string;
+  build: () => Block[];
+}
+
+const fileDefs: FileDef[] = [
+  { name: "experience.txt", description: "where I have worked", build: experienceBlocks },
+  {
+    name: "stack.json",
+    description: "my tech stack",
+    build: () => [{ type: "json", lines: JSON.stringify(stack, null, 2).split("\n") }],
+  },
+  {
+    name: "connect.txt",
+    description: "how to reach me",
+    build: () => [
       {
         type: "list",
         rows: links.map((link) => ({ label: link.label, detail: link.display, href: link.url })),
       },
     ],
-  ],
-  [
-    "gears.txt",
-    () =>
+  },
+  {
+    name: "gears.txt",
+    description: "tools and gear I use",
+    build:     () =>
       gears.flatMap((group, index): Block[] => [
         ...(index > 0 ? [{ type: "spacer" } as const] : []),
         { type: "text", tone: "strong", text: group.category.toUpperCase() },
@@ -57,25 +69,44 @@ const files = new Map<string, () => Block[]>([
           })),
         },
       ]),
-  ],
-]);
+  },
+];
+
+const files = new Map(fileDefs.map((file) => [file.name, file]));
 
 export const catCommand: Command = {
   name: "cat",
   usages: [
     { label: "cat <project>.txt", description: "read about a project" },
-    { label: "cat experience.txt", description: "where I have worked", run: "cat experience.txt" },
-    { label: "cat stack.json", description: "my tech stack", run: "cat stack.json" },
-    { label: "cat connect.txt", description: "how to reach me", run: "cat connect.txt" },
-    { label: "cat gears.txt", description: "tools and gear I use", run: "cat gears.txt" },
+    ...fileDefs.map((file) => ({ label: `cat ${file.name}`, description: file.description, run: `cat ${file.name}` })),
   ],
   run(args) {
-    if (args.length === 0) return fail("cat: missing file name");
+    if (args.length === 0) {
+      // Bare `cat` shows what can be read, each one clickable.
+      return ok([
+        { type: "text", tone: "muted", text: "files:" },
+        {
+          type: "list",
+          rows: [
+            ...fileDefs.map((file) => ({
+              label: file.name,
+              command: `cat ${file.name}`,
+              detail: file.description,
+            })),
+            ...projects.map((project) => ({
+              label: `${project.slug}.txt`,
+              command: `cat ${project.slug}.txt`,
+              detail: project.tagline,
+            })),
+          ],
+        },
+      ]);
+    }
     if (args.length > 1) return fail("cat: too many arguments");
     const name = args[0];
 
-    const build = files.get(name);
-    if (build) return ok(build());
+    const file = files.get(name);
+    if (file) return ok(file.build());
 
     if (name.endsWith(".txt")) {
       const blocks = projectBlocks(name.slice(0, -".txt".length));
