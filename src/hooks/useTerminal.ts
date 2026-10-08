@@ -5,6 +5,7 @@ import { unitTotal } from "@/engine/blocks";
 import type { Block } from "@/engine/types";
 import { performAction } from "@/services/actions";
 import { getAudioState } from "@/services/audioStore";
+import { trackCommand } from "@/services/analytics";
 import { getActivePack } from "@/services/keySound";
 import { rand } from "@/lib/utils";
 
@@ -66,13 +67,14 @@ export function useTerminal() {
 
   /** Run a command: freeze the line, execute, run actions, reveal output. */
   const submit = useCallback(
-    (raw: string) => {
+    (raw: string, track = true) => {
       if (statusRef.current === "running") return;
       clearTimer();
       skipRef.current = null;
       setInput("");
 
       const result = execute(raw, { audio: getAudioState(), keyboard: { pack: getActivePack() } });
+      if (track) trackCommand(raw);
 
       let cleared = false;
       for (const action of result.actions) {
@@ -125,9 +127,9 @@ export function useTerminal() {
     [clearTimer, setStatus],
   );
 
-  /** Type a command into the prompt by itself (silently), then submit it. */
+  /** Type a command into the prompt by itself (silently), then submit it. `silent` keeps it out of analytics (the boot command). */
   const runCommand = useCallback(
-    (text: string) => {
+    (text: string, silent = false) => {
       if (statusRef.current !== "idle") return;
       setStatus("typing");
       setInput("");
@@ -135,7 +137,7 @@ export function useTerminal() {
       const finish = () => {
         clearTimer();
         skipRef.current = null;
-        submit(text);
+        submit(text, !silent);
       };
       skipRef.current = finish;
 
@@ -188,7 +190,7 @@ export function useTerminal() {
       if (cancelled) return;
       timerRef.current = window.setTimeout(() => {
         const userAlreadyActed = entryCountRef.current > 0 || inputRef.current !== "";
-        if (!cancelled && !userAlreadyActed) runCommand(BOOT_COMMAND);
+        if (!cancelled && !userAlreadyActed) runCommand(BOOT_COMMAND, true);
       }, BOOT_DELAY);
     };
     void start();

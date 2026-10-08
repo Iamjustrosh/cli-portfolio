@@ -3,6 +3,7 @@ import { LazyMotion } from "motion/react";
 import StatusBar from "@/components/layout/StatusBar";
 import Terminal from "@/components/terminal/Terminal";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
+import { initAnalytics } from "@/services/analytics";
 import { initAudio } from "@/services/audio";
 import { watchPageShow } from "@/services/leave";
 import { preloadAssets } from "@/services/preload";
@@ -14,6 +15,7 @@ export default function App() {
 
   useEffect(() => {
     preloadAssets();
+    initAnalytics();
     const stopAudio = initAudio();
     const stopPageShow = watchPageShow();
     return () => {

@@ -22,8 +22,24 @@ Copy `.env.example` to `.env` and fill it in:
 
 ```
 VITE_MAIN_SITE_URL=https://your-main-site.com   # where `exit` redirects
-VITE_SITE_URL=https://your-terminal-site.com    # used in og:url meta tag
+VITE_SITE_URL=https://your-terminal-site.com    # used in og:url meta tag (no trailing slash)
+VITE_UMAMI_WEBSITE_ID=                          # optional: turns analytics on
+# VITE_UMAMI_SRC=https://your-umami-host/script.js   # optional: only if you self-host Umami
 ```
+
+## Analytics (Umami)
+
+Analytics is **off** unless `VITE_UMAMI_WEBSITE_ID` is set. It is also off in development and for visitors whose browser sends Do Not Track, and it is limited to the host of `VITE_SITE_URL`, so previews and localhost are never counted.
+
+What is recorded (code: `src/services/analytics.ts`):
+
+- the page view (automatic)
+- `command` with the command name, e.g. `ls` or `cat`. Anything that is not a real command is recorded only as `unknown`. Nothing a visitor typed is ever sent.
+- `project-view` and `project-open` with the project slug, and `resume-download`
+
+The automatic `rosh --help` on load is not counted.
+
+To turn it on: create a website in Umami Cloud, copy its Website ID, set `VITE_UMAMI_WEBSITE_ID` in Vercel (Project Settings → Environment Variables), and redeploy. Env variables are baked in at build time.
 
 ## How to Customize
 
@@ -51,6 +67,7 @@ If you want to understand how the pure TypeScript command engine works without t
 - **Language**: TypeScript (strict)
 - **Animation**: motion/react (framer-motion)
 - **Audio**: Web Audio API (key sounds) + HTML5 Audio (lofi player)
+- **Analytics**: Umami (optional, privacy-friendly)
 - **Testing**: Vitest
 
 ## License
