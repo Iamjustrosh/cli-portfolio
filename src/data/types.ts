@@ -48,3 +48,14 @@ export type GearGroup = {
   category: "hardware" | "software" | "tools";
   items: GearItem[];
 };
+
+
+/** One keyboard sound pack found in public/audio/keys (see scripts/keyboard-packs.mjs). */
+export interface KeyboardPack {
+  /** Folder name. */
+  name: string;
+  /** File names (without .mp3) of the random key sounds in press/, e.g. GENERIC_R0. */
+  generic: string[];
+  /** True if release/ has all four key-up files. */
+  release: boolean;
+}
