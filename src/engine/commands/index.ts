@@ -5,6 +5,7 @@ import { clearCommand } from "./clear";
 import { exitCommand } from "./exit";
 import { cdCommand, fortuneCommand, greetingCommand, pwdCommand, whoamiCommand } from "./extras";
 import { fastfetchCommand } from "./fastfetch";
+import { historyCommand } from "./history";
 import { keyboardCommand } from "./keyboard";
 import { lsCommand } from "./ls";
 import { resume } from "./resume";
@@ -24,6 +25,7 @@ const rest: Command[] = [
   resume,
   playCommand,
   stopCommand,
+  historyCommand,
   clearCommand,
   exitCommand,
   // hidden extras

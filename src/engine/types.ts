@@ -47,6 +47,8 @@ export interface ExecContext {
   audio: { playing: boolean; muted: boolean };
   /** The keyboard sound pack in use (null when none are installed). */
   keyboard: { pack: string | null };
+  /** Commands the visitor ran this session, oldest first (the command being run is included). */
+  history?: readonly string[];
 }
 
 export interface ExecResult {

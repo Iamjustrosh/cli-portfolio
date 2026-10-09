@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
+import { complete } from "@/engine/complete";
 import { execute } from "@/engine/execute";
 import { unitTotal } from "@/engine/blocks";
 import type { Block } from "@/engine/types";
@@ -7,6 +8,7 @@ import { performAction } from "@/services/actions";
 import { getAudioState } from "@/services/audioStore";
 import { trackCommand } from "@/services/analytics";
 import { getActivePack } from "@/services/keySound";
+import { addToHistory, NOT_BROWSING, stepHistory, type Browse } from "@/lib/history";
 import { rand } from "@/lib/utils";
 
 /**
@@ -46,6 +48,12 @@ export function useTerminal() {
   /** Finishes whatever is in progress instantly (typing or reveal). */
   const skipRef = useRef<(() => void) | null>(null);
   const reducedRef = useRef(false);
+  /** Commands the visitor ran this session (for the up/down arrows and `history`). */
+  const historyRef = useRef<string[]>([]);
+  /** Where up/down currently is in that history. */
+  const browseRef = useRef<Browse>(NOT_BROWSING);
+  /** The input as it was after a Tab that could not narrow it down: a second Tab on it lists the options. */
+  const tabRef = useRef<string | null>(null);
 
   useEffect(() => {
     reducedRef.current = !!reducedMotion;
@@ -67,14 +75,22 @@ export function useTerminal() {
 
   /** Run a command: freeze the line, execute, run actions, reveal output. */
   const submit = useCallback(
-    (raw: string, track = true) => {
+    (raw: string, fromVisitor = true) => {
       if (statusRef.current === "running") return;
       clearTimer();
       skipRef.current = null;
       setInput("");
+      browseRef.current = NOT_BROWSING;
+      tabRef.current = null;
 
-      const result = execute(raw, { audio: getAudioState(), keyboard: { pack: getActivePack() } });
-      if (track) trackCommand(raw);
+      // The automatic intro is not the visitor's command: not in history, not in analytics.
+      if (fromVisitor) historyRef.current = addToHistory(historyRef.current, raw);
+      const result = execute(raw, {
+        audio: getAudioState(),
+        keyboard: { pack: getActivePack() },
+        history: historyRef.current,
+      });
+      if (fromVisitor) trackCommand(raw);
 
       let cleared = false;
       for (const action of result.actions) {
@@ -162,6 +178,58 @@ export function useTerminal() {
     [clearTimer, setStatus, submit],
   );
 
+  /** What the visitor types goes through here: it also ends any up/down browsing and any half-finished Tab. */
+  const typeInput = useCallback((value: string) => {
+    browseRef.current = NOT_BROWSING;
+    tabRef.current = null;
+    setInput(value);
+  }, []);
+
+  /** Up/down arrow: walk through this session's commands. */
+  const recall = useCallback((direction: "up" | "down") => {
+    if (statusRef.current !== "idle") return;
+    const step = stepHistory(historyRef.current, browseRef.current, direction, inputRef.current);
+    if (!step) return;
+    browseRef.current = step.browse;
+    tabRef.current = null;
+    setInput(step.value);
+  }, []);
+
+  /**
+   * Tab: complete the command or its argument. When several options remain and the
+   * text cannot grow any further, a second Tab prints them under the prompt (the
+   * prompt keeps what was typed), like a real shell.
+   */
+  const completeInput = useCallback(() => {
+    if (statusRef.current !== "idle") return;
+    const current = inputRef.current;
+    const result = complete(current, {
+      audio: getAudioState(),
+      keyboard: { pack: getActivePack() },
+      history: historyRef.current,
+    });
+    if (!result) return;
+
+    browseRef.current = NOT_BROWSING;
+    if (result.candidates.length === 1) {
+      tabRef.current = null;
+      setInput(result.value);
+    } else if (result.value !== current) {
+      tabRef.current = result.value; // grew a little: one more Tab lists what is left
+      setInput(result.value);
+    } else if (tabRef.current === current) {
+      const options: EntryData = {
+        id: ++entryIdRef.current,
+        command: current,
+        blocks: [{ type: "text", text: result.candidates.join("  ") }],
+      };
+      setEntries((prev) => [...prev, options]);
+      setRevealed(Infinity);
+    } else {
+      tabRef.current = current;
+    }
+  }, []);
+
   /** Any key while busy: finish the current typing/reveal immediately. */
   const skip = useCallback(() => {
     skipRef.current?.();
@@ -201,5 +269,16 @@ export function useTerminal() {
     };
   }, [runCommand, reset]);
 
-  return { entries, input, setInput, status, revealed, submit, runCommand, skip };
+  return {
+    entries,
+    input,
+    setInput: typeInput,
+    status,
+    revealed,
+    submit,
+    runCommand,
+    skip,
+    recall,
+    complete: completeInput,
+  };
 }

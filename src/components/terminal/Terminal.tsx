@@ -10,7 +10,7 @@ import Prompt from "./Prompt";
  * Everything is one continuous column, like a real terminal.
  */
 export default function Terminal() {
-  const { entries, input, setInput, status, revealed, submit, runCommand, skip } = useTerminal();
+  const { entries, input, setInput, status, revealed, submit, runCommand, skip, recall, complete } = useTerminal();
 
   const scrollRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -64,6 +64,8 @@ export default function Terminal() {
             onInputChange={setInput}
             onSubmit={handleSubmit}
             onSkip={skip}
+            onHistory={recall}
+            onComplete={complete}
           />
         </div>
       </Container>

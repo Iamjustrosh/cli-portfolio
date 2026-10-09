@@ -12,7 +12,14 @@ interface PromptProps {
   onInputChange: (value: string) => void;
   onSubmit: (raw: string) => void;
   onSkip: () => void;
+  /** Up/down arrow: step through this session's commands. */
+  onHistory: (direction: "up" | "down") => void;
+  /** Tab: complete what is typed. */
+  onComplete: () => void;
 }
+
+/** Larger than any input: puts the drawn cursor at the end of the text. */
+const END = Number.MAX_SAFE_INTEGER;
 
 /**
  * The active prompt line.
@@ -27,6 +34,8 @@ export default function Prompt({
   onInputChange,
   onSubmit,
   onSkip,
+  onHistory,
+  onComplete,
 }: PromptProps) {
   const sound = useKeySound();
   const [caret, setCaret] = useState(0);
@@ -50,9 +59,28 @@ export default function Prompt({
       }
       return;
     }
-    if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+    if (event.nativeEvent.isComposing) return;
+
+    if (event.key === "Enter") {
       event.preventDefault();
       onSubmit(input);
+    } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault(); // otherwise the caret would jump to the start or end of the line
+      onHistory(event.key === "ArrowUp" ? "up" : "down");
+      setCaret(END);
+    } else if (
+      event.key === "Tab" &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      input.trim() !== ""
+    ) {
+      // Only with text typed: with an empty prompt Tab keeps moving focus as usual, so
+      // keyboard-only visitors can still reach the clickable commands and the sound toggle.
+      event.preventDefault();
+      onComplete();
+      setCaret(END);
     }
   }
 

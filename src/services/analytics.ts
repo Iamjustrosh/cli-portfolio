@@ -10,7 +10,7 @@ import { normalize } from "@/engine/execute";
  *    anything unknown is reported as "unknown"
  *
  * Events: the page view (automatic), `command` { name }, `project-view` { slug },
- * `project-open` { slug }, `resume-download`.
+ * `project-open` { slug }, and `resume-download` (the `resume` command).
  */
 
 const DEFAULT_SRC = "https://cloud.umami.is/script.js";
@@ -88,7 +88,13 @@ export function trackCommand(raw: string): void {
   const [verb, ...args] = line.split(" ");
   const command = registry.get(verb);
   track("command", { name: command ? command.name : "unknown" });
-  if (!command || args.length !== 1) return;
+  if (!command) return;
+
+  if (command.name === "resume" && args.length === 0) {
+    track("resume-download");
+    return;
+  }
+  if (args.length !== 1) return;
 
   const target = args[0];
   const isProject = (slug: string) => projects.some((project) => project.slug === slug);
@@ -96,8 +102,7 @@ export function trackCommand(raw: string): void {
   if (command.name === "cat" && target.endsWith(".txt")) {
     const slug = target.slice(0, -".txt".length);
     if (isProject(slug)) track("project-view", { slug });
-  } else if (command.name === "run") {
-    if (target === "resume") track("resume-download");
-    else if (isProject(target)) track("project-open", { slug: target });
+  } else if (command.name === "run" && isProject(target)) {
+    track("project-open", { slug: target });
   }
 }

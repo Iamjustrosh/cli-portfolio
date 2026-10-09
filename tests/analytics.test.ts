@@ -117,9 +117,15 @@ describe("trackCommand", () => {
     ]);
   });
 
-  it("reports resume downloads", () => {
-    trackCommand("run resume");
-    expect(calls()).toEqual([["command", { name: "run" }], ["resume-download"]]);
+  it("reports resume downloads (the resume command)", () => {
+    trackCommand("resume");
+    expect(calls()).toEqual([["command", { name: "resume" }], ["resume-download"]]);
+  });
+
+  it("does not report a resume download for arguments the resume command would reject", () => {
+    trackCommand("resume please");
+    trackCommand("run resume"); // not a thing any more: run only opens projects
+    expect(calls().map((call) => call[0])).toEqual(["command", "command"]);
   });
 
   it("matches however the command was typed", () => {
