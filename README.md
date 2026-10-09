@@ -4,7 +4,7 @@ A browser-based interactive terminal portfolio. Instead of a traditional portfol
 
 **Live demo:** [cli.iamjustrosh.in](https://cli.iamjustrosh.in) · Main site: [iamjustrosh.in](https://iamjustrosh.in)
 
-<!-- Add a screenshot or a short screen recording here, e.g. ![rosh-terminal demo](docs/demo.gif) -->
+![rosh-terminal demo](./public/demo.gif) 
 
 ## Features
 
